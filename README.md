@@ -22,7 +22,9 @@
   - DNS Query filtering. This is what I need.
 
 P.S. DNS Query filtering is slow now as linear searching is enough for me.
+
 P.S.2. DNS Query filtering is not enabled until you added `allowed-query` in config file.
+
 P.S.3. If you don't like DNS Query filtering, use the one from original repo instead.
 
 #### INSTALLATION
