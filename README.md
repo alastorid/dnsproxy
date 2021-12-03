@@ -19,6 +19,7 @@
   - Secure. Runs chrooted and without root privileges.
   - Fast. Able to process hundreds of queries per second.
   - Easy to setup. Simple configuration file.
+  - DNS Query filtering. This is what I need.
 
 #### INSTALLATION
 
@@ -63,6 +64,8 @@
     internal 127.0.0.1                # allowed to do recursive queries.
 
     statistics 3600                   # Print statistics every hour.
+    allowed-query en.wikipedia.org    # Now I query only wikipedia.
+    allowed-query www.reddit.com      # Now I query reddit as well.
   ```
 
 #### COMPATIBILITY
