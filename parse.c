@@ -46,7 +46,7 @@ parse(const char *fname)
 			*s = '\0';
 
 		key = strtok(buf, " \t=");
-		arg = strtok(NULL, " \t\n");
+		arg = strtok(NULL, " \t\r\n");
 		if (!key || !arg)
 			continue;
 

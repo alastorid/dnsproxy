@@ -29,7 +29,7 @@
 #include "dnsproxy.h"
 
 struct allowed_query {
-	char* domain;
+    char* domain;
 };
 
 static struct allowed_query *allowed_queries = NULL;
@@ -39,82 +39,83 @@ static unsigned int allowed_queries_count = 0;
 int
 add_allowed_query(char *s)
 {
-  unsigned int desired_alloc_size;
-  char *s_dup;
-  if (s == NULL) // why would i even need this?
-		return 0;
-  
-  if(allowed_queries_count <= allowed_queries_alloc)
-  {
-    desired_alloc_size = allowed_queries_alloc? 1u : allowed_queries_alloc*2u;
-    if(desired_alloc_size > allowed_queries_alloc)
+    unsigned int desired_alloc_size;
+    char *s_dup;
+    if (s == NULL) // why would i even need this?
+        return 0;
+
+    if(allowed_queries_count <= allowed_queries_alloc)
     {
-      if(0 == allowed_queries_alloc)
-      {
-        allowed_queries = (struct allowed_query *)malloc(desired_alloc_size * sizeof(struct allowed_query));
-        if(NULL == allowed_queries)
+        desired_alloc_size = allowed_queries_alloc ? allowed_queries_alloc*2u : 1u;
+        if(desired_alloc_size > allowed_queries_alloc)
         {
-          DPRINTF(("add_allowed_query failed, domain=%s, malloc failed\n", s));
-          return 0;
+            if(0 == allowed_queries_alloc)
+            {
+                allowed_queries = (struct allowed_query *)malloc(desired_alloc_size * sizeof(struct allowed_query));
+                if(NULL == allowed_queries)
+                {
+                    DPRINTF(("add_allowed_query failed, domain=%s, malloc failed\n", s));
+                    return 0;
+                }
+            }
+            else
+            {
+                allowed_queries = (struct allowed_query *)realloc(allowed_queries, desired_alloc_size * sizeof(struct allowed_query));
+                if(NULL == allowed_queries)
+                {
+                    DPRINTF(("add_allowed_query failed, domain=%s, realloc failed\n", s));
+                    return 0;
+                }
+            }
         }
-      }
-      else
-      {
-        allowed_queries = (struct allowed_query *)realloc(allowed_queries, desired_alloc_size * sizeof(struct allowed_query));
-        if(NULL == allowed_queries)
+        else
         {
-          DPRINTF(("add_allowed_query failed, domain=%s, realloc failed\n", s));
-          return 0;
+            DPRINTF(("add_allowed_query failed, domain=%s, my counter only %lu bit width\n", s, 8*sizeof(allowed_queries_alloc)));
+            return 0;
         }
-      }
-      allowed_queries_alloc = desired_alloc_size;
+        allowed_queries_alloc = desired_alloc_size;
+    }
+
+    s_dup = strdup(s);
+    if(NULL != s_dup)
+    {
+        allowed_queries[allowed_queries_count++].domain = s_dup;
     }
     else
     {
-      DPRINTF(("add_allowed_query failed, domain=%s, my counter only %d bit width\n", s, 8*sizeof(allowed_queries_alloc)));
-      return 0;
-    } 
-  }
-  s_dup = strdup(s);
-  if(NULL != s_dup)
-  {
-    allowed_queries[allowed_queries_count++].domain = s_dup;
-  }
-  else
-  {
-    DPRINTF(("add_allowed_query failed, domain=%s, strdup failed\n", s))    
-    return 0;
-  }
-  
-	DPRINTF(("add_allowed_query %s\n", s))
+        DPRINTF(("add_allowed_query failed, domain=%s, strdup failed\n", s));
+        return 0;
+    }
 
-	return 1;
+    DPRINTF(("add_allowed_query %s\n", s));
+
+    return 1;
 }
 
 int
 is_allowed_query(char* s)
 {
-  unsigned int i;
-  if(0u == allowed_queries_count)
-  {
-    // nothing added
-    return 1;
-  }
-  //DPRINTF(("is_internal(%s)\n", s));
-  for(i=0u; i<allowed_queries_count; ++i)
-  {
-    // case insensitive not my thing 
-    if(!strcmp(s, allowed_queries[i].domain))
+    unsigned int i;
+    if(0u == allowed_queries_count)
     {
-      return 1;
-    }    
-  }	
-	return 0;
+        // nothing added
+        return 1;
+    }
+    DPRINTF(("is_allowed_query(%s)\n", s));
+    for(i=0u; i<allowed_queries_count; ++i)
+    {
+        // case insensitive not my thing
+        if(!strcmp(s, allowed_queries[i].domain))
+        {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int
 deinit_allowed_query()
 {
-  // unimplemented, bite me not
-  return 1;
+    // unimplemented, bite me not
+    return 1;
 }

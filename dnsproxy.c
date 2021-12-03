@@ -74,6 +74,49 @@ timeout(int fd, short event, void *arg)
 	++removed_queries;
 }
 
+/* ARGUSED */
+// function: ConvertDnsQueryToStr
+// dns_query:
+// |3|'w'w'w'|6|'r'e'd'd'i't'|3|'c'o'm'|
+// return: a newly allocated buffer, you have to free it after use. NULL if failed.
+// www.reddit.com
+static char*
+ConvertDnsQueryToStr(unsigned char* dns_query)
+{
+	char* result = NULL;
+	int str_len = 0;
+	unsigned char* p = dns_query;
+
+	while(0u != *p)
+	{
+		unsigned char chunk_size = *p + 1;
+		str_len += chunk_size;
+		p += chunk_size;
+    }
+	if(0 != str_len)
+	{
+		char *buff = malloc(str_len * sizeof(char));
+		if(NULL != buff)
+		{
+			char *q = buff;
+			p = dns_query;
+			while(0u != *p)
+			{
+				unsigned char chunk_size = *p + 1;
+				while(--chunk_size)
+				{
+					*q++=*++p;
+				}
+				*q++='.';
+				p++;
+			}
+			*--q='\0';
+			result = buff;
+		}
+	}
+	return result;
+}
+
 /* do_query -- Called by the event loop when a packet arrives at our
  * listening socket. Read the packet, create a new query, append it to the
  * queue and send it to the correct server.
@@ -132,48 +175,97 @@ do_query(int fd, short event, void *arg)
 		req->recursion = 0;
 		DPRINTF(("External query RD=%d\n", RD(buf)));
 	}
+	/* is it allowed? */
+	typedef struct _dns
+	{
+		uint16_t transaction_id;
+		uint16_t flags;
+		uint16_t questions;
+		uint16_t answerrrs;
+		uint16_t authorityrrs;
+		uint16_t additionalrrs;
+		// queries
+		uint8_t query;
+	} *PDNS, DNS;
+	// DNS Flags = *(unsigned short*)(buf+2);
+	// query Flags == 01 00 == 0x0001; recurse
+	//          or == 00 00 == 0x0000; not recurse
+	PDNS dns = (PDNS)&buf[0];
+	printf("dns->flags = %#x\n", dns->flags);
 
-	/* insert it into the hash table */
-	hash_add_request(req);
-
-	/* overwrite the original query id */
-	memcpy(&buf[0], &req->id, 2);
-
-	if (req->recursion) {
-
-		/* recursive queries timeout in 90s */
-		event_set(&req->timeout, -1, 0, timeout, req);
-		tv.tv_sec=recursive_timeout; tv.tv_usec=0;
-		event_add(&req->timeout, &tv);
-
-		/* send it to our recursive server */
-		if ((byte = sendto(sock_answer, buf, (unsigned int)byte, 0,
-				    (struct sockaddr *)&recursive_addr,
-				    sizeof(struct sockaddr_in))) == -1) {
-			error("sendto failed: %s", strerror(errno));
-			++dropped_queries;
-			return;
-		}
-
-		++recursive_queries;
-
+	char* domain = (0 == (dns->flags&~1)) 
+		&& (1 == ntohs(dns->questions)) && (0 == ntohs(dns->answerrrs))
+		&& (0 == ntohs(dns->authorityrrs)) && (0 == ntohs(dns->additionalrrs))
+		? ConvertDnsQueryToStr(&(dns->query))
+		: NULL;
+	if (NULL == domain || is_allowed_query(domain)) {
+		req->allowed = 1;
+		DPRINTF(("Allowed query domain=%s\n", domain==NULL?"(NULL)":domain));
 	} else {
+		req->allowed = 0;
+		DPRINTF(("Disallowed query domain=%s\n", domain==NULL?"(NULL)":domain));
+	}
+	if(NULL != domain)
+	{
+		free(domain);
+		domain = NULL;
+	}
 
-		/* authoritative queries timeout in 10s */
-		event_set(&req->timeout, -1, 0, timeout, req);
-		tv.tv_sec=authoritative_timeout; tv.tv_usec=0;
-		event_add(&req->timeout, &tv);
-
-		/* send it to our authoritative server */
-		if ((byte = sendto(sock_answer, buf, (unsigned int)byte, 0,
-				    (struct sockaddr *)&authoritative_addr,
+	if (0 == req->allowed)
+	{
+		dns->flags |= 0x0380; // answer and no such
+		if ((byte = sendto(sock_query, buf, (unsigned int)byte, 0,
+				    (struct sockaddr *)&fromaddr,
 				    sizeof(struct sockaddr_in))) == -1) {
 			error("sendto failed: %s", strerror(errno));
 			++dropped_queries;
 			return;
 		}
+	}
+	else
+	{
+		/* insert it into the hash table */
+		hash_add_request(req);
 
-		++authoritative_queries;
+		/* overwrite the original query id */
+		memcpy(&buf[0], &req->id, 2);
+
+		if (req->recursion) {
+
+			/* recursive queries timeout in 90s */
+			event_set(&req->timeout, -1, 0, timeout, req);
+			tv.tv_sec=recursive_timeout; tv.tv_usec=0;
+			event_add(&req->timeout, &tv);
+
+			/* send it to our recursive server */
+			if ((byte = sendto(sock_answer, buf, (unsigned int)byte, 0,
+					    (struct sockaddr *)&recursive_addr,
+					    sizeof(struct sockaddr_in))) == -1) {
+				error("sendto failed: %s", strerror(errno));
+				++dropped_queries;
+				return;
+			}
+
+			++recursive_queries;
+
+		} else {
+
+			/* authoritative queries timeout in 10s */
+			event_set(&req->timeout, -1, 0, timeout, req);
+			tv.tv_sec=authoritative_timeout; tv.tv_usec=0;
+			event_add(&req->timeout, &tv);
+
+			/* send it to our authoritative server */
+			if ((byte = sendto(sock_answer, buf, (unsigned int)byte, 0,
+					    (struct sockaddr *)&authoritative_addr,
+					    sizeof(struct sockaddr_in))) == -1) {
+				error("sendto failed: %s", strerror(errno));
+				++dropped_queries;
+				return;
+			}
+
+			++authoritative_queries;
+		}
 	}
 }
 

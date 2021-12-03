@@ -66,6 +66,7 @@ struct request {
 	struct sockaddr_in	client;
 	unsigned short		clientid;
 	unsigned char		recursion;
+	unsigned char		allowed;
 
 	struct event		timeout;
 
