@@ -113,7 +113,7 @@ int add_internal(char *);
 int is_internal(struct in_addr);
 
 /* filter.c */
-int add_query(char *);
+int add_allowed_query(char *);
 int is_allowed_query(char *);
 
 /* log.c */
