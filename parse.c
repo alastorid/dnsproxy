@@ -100,6 +100,10 @@ parse(const char *fname)
 			add_internal(arg);
 			continue;
 		}
+		if (!strcmp(key, "allowed-query")) {
+			add_allowed_query(arg);
+			continue;
+		}
 
 		info("Unable to parse '%s'", buf);
 	}
