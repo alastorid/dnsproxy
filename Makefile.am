@@ -1,6 +1,6 @@
 sbin_PROGRAMS = dnsproxy
 dnsproxy_SOURCES = dnsproxy.c dnsproxy.h \
-                   daemon.c hash.c internal.c log.c parse.c stats.c
+                   daemon.c hash.c internal.c filter.c log.c parse.c stats.c
 
 man_MANS = dnsproxy.8
 
