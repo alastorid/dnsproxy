@@ -112,6 +112,10 @@ struct request *hash_find_request(unsigned short);
 int add_internal(char *);
 int is_internal(struct in_addr);
 
+/* filter.c */
+int add_query(char *);
+int is_allowed_query(char *);
+
 /* log.c */
 void log_syslog(const char *);
 void info(const char *, ...);
