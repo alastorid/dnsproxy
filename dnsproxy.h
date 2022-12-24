@@ -117,6 +117,10 @@ int is_internal(struct in_addr);
 int add_allowed_query(char *);
 int is_allowed_query(char *);
 
+/* answer.c */
+int add_static_answer(char *, char* );
+uint32_t is_static_answer(char* );
+
 /* log.c */
 void log_syslog(const char *);
 void info(const char *, ...);
