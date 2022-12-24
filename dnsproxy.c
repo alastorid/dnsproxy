@@ -132,6 +132,7 @@ do_query(int fd, short event, void *arg)
 	unsigned int fromlen = sizeof(fromaddr);
 	struct request *req;
 	struct timeval tv;
+	uint32_t answer_ip;
 
 	++all_queries;
 
@@ -190,7 +191,17 @@ do_query(int fd, short event, void *arg)
 	// DNS Flags = *(unsigned short*)(buf+2);
 	// query Flags == 01 00 == 0x0001; recurse
 	//          or == 00 00 == 0x0000; not recurse
+	typedef struct __attribute__((__packed__)) _dns_ans
+	{
+		uint16_t name;
+		uint16_t type;
+		uint16_t class;
+		uint32_t ttl;
+		uint16_t datalength;
+		uint32_t data;
+	} *PANS, ANS;
 	PDNS dns = (PDNS)&buf[0];
+	PANS ans = (PANS)&buf[byte];
 	printf("dns->flags = %#x\n", dns->flags);
 
 	char* domain = (0 == (dns->flags&~1)) 
@@ -200,11 +211,13 @@ do_query(int fd, short event, void *arg)
 		: NULL;
 	if (NULL == domain || is_allowed_query(domain)) {
 		req->allowed = 1;
+		answer_ip = is_static_answer(domain);
 		DPRINTF(("Allowed query domain=%s\n", domain==NULL?"(NULL)":domain));
 	} else {
 		req->allowed = 0;
 		DPRINTF(("Disallowed query domain=%s\n", domain==NULL?"(NULL)":domain));
 	}
+
 	if(NULL != domain)
 	{
 		free(domain);
@@ -213,7 +226,7 @@ do_query(int fd, short event, void *arg)
 
 	if (0 == req->allowed)
 	{
-		dns->flags |= 0x0384; // answer and no such
+		dns->flags |= 0x0380; // answer and no such
 		if ((byte = sendto(sock_query, buf, (unsigned int)byte, 0,
 				    (struct sockaddr *)&fromaddr,
 				    sizeof(struct sockaddr_in))) == -1) {
@@ -221,6 +234,28 @@ do_query(int fd, short event, void *arg)
 			++dropped_queries;
 			return;
 		}
+	}
+	else if(answer_ip)
+	{
+		/* got static answer */
+		dns->flags = htons(0x8400); // answer
+		dns->answerrrs = htons(1);
+		ans->name = htons(0xc00c);
+		ans->type = htons(1);
+		ans->class= htons(1);
+		ans->ttl = htonl(1800);
+		ans->datalength = htons(4);
+		ans->data = htonl(answer_ip);
+
+		if ((byte = sendto(sock_query, buf, (unsigned int)byte+sizeof(ANS), 0,
+				    (struct sockaddr *)&fromaddr,
+				    sizeof(struct sockaddr_in))) == -1) {
+			error("sendto failed: %s", strerror(errno));
+			++dropped_queries;
+			return;
+		}
+		++answered_queries;
+		return;
 	}
 	else
 	{

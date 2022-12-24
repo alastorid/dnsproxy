@@ -43,7 +43,7 @@ add_static_answer(char *s, char* ip_str)
     unsigned int desired_alloc_size;
     char *s_dup;
     int32_t ip;
-    if (s == NULL) // why would i even need this?
+    if (s == NULL || NULL == ip_str) // why would i even need this?
         return 0;
 
     if(static_answers_count <= static_answers_alloc)
@@ -84,7 +84,7 @@ add_static_answer(char *s, char* ip_str)
     {
         if(-1 != ip)
         {
-            static_answers[static_answers_count++].domain = s_dup;
+            static_answers[static_answers_count].domain = s_dup;
             static_answers[static_answers_count++].ip = ip;
         }
         else
@@ -99,7 +99,7 @@ add_static_answer(char *s, char* ip_str)
         return 0;
     }
 
-    DPRINTF(("add_static_answer %s\n", s));
+    DPRINTF(("add_static_answer %s : %s\n", s, ip_str));
 
     return 1;
 }

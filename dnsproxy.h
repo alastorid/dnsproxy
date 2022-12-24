@@ -45,7 +45,7 @@
 #include <stdarg.h>
 
 #include <event.h>
-
+#define DEBUG
 #ifdef DEBUG
 #define DPRINTF(x) do { printf x ; } while (0)
 #else

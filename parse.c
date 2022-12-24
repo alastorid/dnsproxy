@@ -35,7 +35,7 @@ parse(const char *fname)
 {
 	FILE *f;
 	char buf[1024];
-	char *s, *key, *arg;
+	char *s, *key, *arg, *arg2;
 
 	if ((f = fopen(fname, "r")) == NULL)
 		return 0;
@@ -47,6 +47,7 @@ parse(const char *fname)
 
 		key = strtok(buf, " \t=");
 		arg = strtok(NULL, " \t\r\n");
+		arg2 = strtok(NULL, " \t\r\n");
 		if (!key || !arg)
 			continue;
 
@@ -102,6 +103,11 @@ parse(const char *fname)
 		}
 		if (!strcmp(key, "allowed-query")) {
 			add_allowed_query(arg);
+			continue;
+		}
+		if (!strcmp(key, "static-answer")) {
+			add_allowed_query(arg);
+			add_static_answer(arg, arg2);
 			continue;
 		}
 
