@@ -213,7 +213,7 @@ do_query(int fd, short event, void *arg)
 
 	if (0 == req->allowed)
 	{
-		dns->flags |= 0x0380; // answer and no such
+		dns->flags |= 0x0384; // answer and no such
 		if ((byte = sendto(sock_query, buf, (unsigned int)byte, 0,
 				    (struct sockaddr *)&fromaddr,
 				    sizeof(struct sockaddr_in))) == -1) {
