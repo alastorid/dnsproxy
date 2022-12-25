@@ -245,7 +245,7 @@ do_query(int fd, short event, void *arg)
 		ans->class= htons(1);
 		ans->ttl = htonl(1800);
 		ans->datalength = htons(4);
-		ans->data = htonl(answer_ip);
+		ans->data = answer_ip;
 
 		if ((byte = sendto(sock_query, buf, (unsigned int)byte+sizeof(ANS), 0,
 				    (struct sockaddr *)&fromaddr,
