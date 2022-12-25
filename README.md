@@ -72,6 +72,7 @@ P.S.3. If you don't like DNS Query filtering, use the one from original repo ins
     statistics 3600                   # Print statistics every hour.
     allowed-query en.wikipedia.org    # Now I query only wikipedia.
     allowed-query www.reddit.com      # Now I query reddit as well.
+    static-answer lic.cc 8.8.8.8      # I say 8.8.8.8 if lic.cc is asked
   ```
 
 #### COMPATIBILITY
