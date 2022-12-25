@@ -19,13 +19,12 @@
   - Secure. Runs chrooted and without root privileges.
   - Fast. Able to process hundreds of queries per second.
   - Easy to setup. Simple configuration file.
-  - DNS Query filtering. This is what I need.
+  - DNS Query filtering. (this fork)
+  - Custom DNS A record (this fork)
 
-P.S. DNS Query filtering is slow now as linear searching is enough for me.
+P.S. DNS Query filtering uses linear searching internally.
 
 P.S.2. DNS Query filtering is not enabled until you added `allowed-query` in config file.
-
-P.S.3. If you don't like DNS Query filtering, use the one from original repo instead.
 
 #### INSTALLATION
 
