@@ -46,7 +46,7 @@ add_static_answer(char *s, char* ip_str)
     if (s == NULL || NULL == ip_str) // why would i even need this?
         return 0;
 
-    if(static_answers_count <= static_answers_alloc)
+    if(static_answers_alloc <= static_answers_count)
     {
         desired_alloc_size = static_answers_alloc ? static_answers_alloc*2u : 1u;
         if(desired_alloc_size > static_answers_alloc)

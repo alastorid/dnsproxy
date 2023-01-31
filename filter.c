@@ -44,7 +44,7 @@ add_allowed_query(char *s)
     if (s == NULL) // why would i even need this?
         return 0;
 
-    if(allowed_queries_count <= allowed_queries_alloc)
+    if(allowed_queries_alloc <= allowed_queries_count)
     {
         desired_alloc_size = allowed_queries_alloc ? allowed_queries_alloc*2u : 1u;
         if(desired_alloc_size > allowed_queries_alloc)
