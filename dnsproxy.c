@@ -212,6 +212,15 @@ do_query(int fd, short event, void *arg)
 	if (NULL == domain || is_allowed_query(domain)) {
 		req->allowed = 1;
 		answer_ip = is_static_answer(domain);
+		// a quick fix to drop IPv6 AAAA query when is static answer to make things work
+		if( 0 != answer_ip
+			&& 28 == ntohs(*(uint16_t*_)&(((char*)&dns->query)[strlen((char*)&dns->query)+1]))			
+			)
+		{
+			req->allowed = 0;
+			answer_ip = 0;
+			DPRINTF(("Static answer doesn't support IPv6"));
+		}
 		DPRINTF(("Allowed query domain=%s\n", domain==NULL?"(NULL)":domain));
 	} else {
 		req->allowed = 0;
