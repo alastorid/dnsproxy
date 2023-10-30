@@ -214,7 +214,7 @@ do_query(int fd, short event, void *arg)
 		answer_ip = is_static_answer(domain);
 		// a quick fix to drop IPv6 AAAA query when is static answer to make things work
 		if( 0 != answer_ip
-			&& 28 == ntohs(*(uint16_t*_)&(((char*)&dns->query)[strlen((char*)&dns->query)+1]))			
+			&& 28 == ntohs(*(uint16_t*)&(((char*)&dns->query)[strlen((char*)&dns->query)+1]))			
 			)
 		{
 			req->allowed = 0;
