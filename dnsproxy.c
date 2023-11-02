@@ -202,7 +202,7 @@ do_query(int fd, short event, void *arg)
 	} *PANS, ANS;
 	PDNS dns = (PDNS)&buf[0];
 	PANS ans = (PANS)&buf[byte];
-	printf("dns->flags = %#x\n", dns->flags);
+	//printf("dns->flags = %#x\n", dns->flags);
 
 	char* domain = (0 == (dns->flags&~1)) 
 		&& (1 == ntohs(dns->questions)) && (0 == ntohs(dns->answerrrs))
